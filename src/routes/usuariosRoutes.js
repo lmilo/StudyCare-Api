@@ -3,7 +3,7 @@ import {
   obtenerUsuarios,
   obtenerUsuarioPorId,
   crearUsuario,
-} from "../controllers/usuariosController.js";
+} from "../controllers/usuario.controller.js";
 
 const router = express.Router();
 

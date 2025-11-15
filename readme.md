@@ -15,6 +15,7 @@ API desarrollada en **Node.js** con **Express** y **SQL Server**, parte del proy
 ---
 
 ## 📂 Estructura del proyecto
+```
 StudyCare-API/
 │
 ├── src/
@@ -29,9 +30,7 @@ StudyCare-API/
 ├── .env
 ├── package.json
 └── package-lock.json
-
-yaml
-Copiar código
+```
 
 ---
 

@@ -1,16 +1,20 @@
-import { getConnection, sql } from "../config/db.js";
+import { Request, Response } from "express";
+import { getConnection, sql } from "../config/db";
+import { Tarea } from "../interfaces/tareas";
 
 /**
  * Obtener todas las tareas de un usuario
  */
-export const obtenerTareasPorUsuario = async (req, res) => {
+export const obtenerTareasPorUsuario = async (req: Request, res: Response) => {
   const { usuario_id } = req.params;
+
   try {
     const pool = await getConnection();
+
     const result = await pool
       .request()
-      .input("usuario_id", sql.Int, usuario_id)
-      .query(
+      .input("usuario_id", sql.Int, Number(usuario_id))
+      .query<Tarea>(
         "SELECT * FROM Tareas WHERE usuario_id = @usuario_id ORDER BY fecha_vencimiento"
       );
 
@@ -24,9 +28,14 @@ export const obtenerTareasPorUsuario = async (req, res) => {
 /**
  * Crear nueva tarea
  */
-export const crearTarea = async (req, res) => {
-  const { usuario_id, titulo, descripcion, categoria, fecha_vencimiento } =
-    req.body;
+export const crearTarea = async (req: Request, res: Response) => {
+  const {
+    usuario_id,
+    titulo,
+    descripcion,
+    categoria,
+    fecha_vencimiento,
+  }: Partial<Tarea> = req.body;
 
   if (!usuario_id || !titulo) {
     return res
@@ -36,13 +45,14 @@ export const crearTarea = async (req, res) => {
 
   try {
     const pool = await getConnection();
+
     await pool
       .request()
       .input("usuario_id", sql.Int, usuario_id)
       .input("titulo", sql.NVarChar, titulo)
-      .input("descripcion", sql.NVarChar, descripcion || null)
-      .input("categoria", sql.NVarChar, categoria || null)
-      .input("fecha_vencimiento", sql.DateTime, fecha_vencimiento || null)
+      .input("descripcion", sql.NVarChar, descripcion ?? null)
+      .input("categoria", sql.NVarChar, categoria ?? null)
+      .input("fecha_vencimiento", sql.DateTime, fecha_vencimiento ?? null)
       .query(
         `INSERT INTO Tareas (usuario_id, titulo, descripcion, categoria, fecha_vencimiento)
          VALUES (@usuario_id, @titulo, @descripcion, @categoria, @fecha_vencimiento)`
@@ -58,21 +68,28 @@ export const crearTarea = async (req, res) => {
 /**
  * Actualizar tarea existente
  */
-export const actualizarTarea = async (req, res) => {
+export const actualizarTarea = async (req: Request, res: Response) => {
   const { id_tarea } = req.params;
-  const { titulo, descripcion, categoria, fecha_vencimiento, completada } =
-    req.body;
+
+  const {
+    titulo,
+    descripcion,
+    categoria,
+    fecha_vencimiento,
+    completada,
+  }: Partial<Tarea> = req.body;
 
   try {
     const pool = await getConnection();
+
     await pool
       .request()
-      .input("id_tarea", sql.Int, id_tarea)
-      .input("titulo", sql.NVarChar, titulo)
-      .input("descripcion", sql.NVarChar, descripcion)
-      .input("categoria", sql.NVarChar, categoria)
-      .input("fecha_vencimiento", sql.DateTime, fecha_vencimiento)
-      .input("completada", sql.Bit, completada)
+      .input("id_tarea", sql.Int, Number(id_tarea))
+      .input("titulo", sql.NVarChar, titulo ?? null)
+      .input("descripcion", sql.NVarChar, descripcion ?? null)
+      .input("categoria", sql.NVarChar, categoria ?? null)
+      .input("fecha_vencimiento", sql.DateTime, fecha_vencimiento ?? null)
+      .input("completada", sql.Bit, completada ?? false)
       .query(
         `UPDATE Tareas
          SET titulo = @titulo,
@@ -93,14 +110,15 @@ export const actualizarTarea = async (req, res) => {
 /**
  * Eliminar tarea
  */
-export const eliminarTarea = async (req, res) => {
+export const eliminarTarea = async (req: Request, res: Response) => {
   const { id_tarea } = req.params;
 
   try {
     const pool = await getConnection();
+
     await pool
       .request()
-      .input("id_tarea", sql.Int, id_tarea)
+      .input("id_tarea", sql.Int, Number(id_tarea))
       .query("DELETE FROM Tareas WHERE id_tarea = @id_tarea");
 
     res.json({ message: "Tarea eliminada correctamente" });

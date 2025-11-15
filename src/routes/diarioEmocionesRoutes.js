@@ -4,7 +4,7 @@ import {
   crearRegistroEmocional,
   actualizarRegistroEmocional,
   eliminarRegistroEmocional,
-} from "../controllers/diarioEmocionesController.js";
+} from "../controllers/diarioEmociones.controller.js";
 
 const router = express.Router();
 

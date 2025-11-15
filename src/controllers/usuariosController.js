@@ -1,13 +1,14 @@
-import { getConnection, sql } from "../config/db.js";
+import { Request, Response } from "express";
+import { getConnection, sql } from "../config/db";
+import { Usuario } from ;
 
-/**
- * GET /api/usuarios
- * Retorna todos los usuarios
- */
-export const obtenerUsuarios = async (req, res) => {
+export const obtenerUsuarios = async (req: Request, res: Response) => {
   try {
     const pool = await getConnection();
-    const result = await pool.request().query("SELECT * FROM Usuarios");
+    const result = await pool
+      .request()
+      .query<Usuario>("SELECT * FROM Usuarios");
+
     res.json(result.recordset);
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
@@ -15,21 +16,21 @@ export const obtenerUsuarios = async (req, res) => {
   }
 };
 
-/**
- * GET /api/usuarios/:id
- * Retorna un usuario por su ID
- */
-export const obtenerUsuarioPorId = async (req, res) => {
+export const obtenerUsuarioPorId = async (req: Request, res: Response) => {
   const { id } = req.params;
+
   try {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .input("id_usuario", sql.Int, id)
-      .query("SELECT * FROM Usuarios WHERE id_usuario = @id_usuario");
+      .input("id_usuario", sql.Int, Number(id))
+      .query<Usuario>(
+        "SELECT * FROM Usuarios WHERE id_usuario = @id_usuario"
+      );
 
-    if (result.recordset.length === 0)
+    if (result.recordset.length === 0) {
       return res.status(404).json({ message: "Usuario no encontrado" });
+    }
 
     res.json(result.recordset[0]);
   } catch (error) {
@@ -42,8 +43,8 @@ export const obtenerUsuarioPorId = async (req, res) => {
  * POST /api/usuarios
  * Crea un nuevo usuario
  */
-export const crearUsuario = async (req, res) => {
-  const { nombre, correo, contraseña_hash, rol_id } = req.body;
+export const crearUsuario = async (req: Request, res: Response) => {
+  const { nombre, correo, contraseña_hash, rol_id }: Partial<Usuario> = req.body;
 
   if (!nombre || !correo || !contraseña_hash || !rol_id) {
     return res
@@ -58,7 +59,7 @@ export const crearUsuario = async (req, res) => {
     const existe = await pool
       .request()
       .input("correo", sql.NVarChar, correo)
-      .query("SELECT * FROM Usuarios WHERE correo = @correo");
+      .query<Usuario>("SELECT * FROM Usuarios WHERE correo = @correo");
 
     if (existe.recordset.length > 0) {
       return res.status(400).json({ message: "El correo ya está registrado" });

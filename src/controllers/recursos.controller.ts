@@ -1,23 +1,51 @@
-import { getConnection, sql } from "../config/db.js";
+import { Request, Response } from "express";
+import { getConnection, sql } from "../config/db";
+import { RecursoEducativo } from "../interfaces/recursoEducativo";
 
 /**
- * Obtener todos los recursos educativos
+ * Tipos para los parámetros y body
  */
-export const obtenerRecursos = async (req, res) => {
+interface ParamsCategoria {
+  categoria: string;
+}
+
+interface ParamsRecurso {
+  id_recurso: string;
+}
+
+interface BodyRecurso {
+  titulo: string;
+  descripcion?: string | null;
+  categoria?: string | null;
+  tipo?: string;
+  url?: string | null;
+  autor?: string | null;
+}
+
+
+export const obtenerRecursos = async (
+  req: Request,
+  res: Response<RecursoEducativo[]>
+): Promise<void> => {
   try {
     const pool = await getConnection();
-    const result = await pool.request().query("SELECT * FROM RecursosEducativos ORDER BY fecha_publicacion DESC");
-    res.json(result.recordset);
+    const result = await pool
+      .request()
+      .query("SELECT * FROM RecursosEducativos ORDER BY fecha_publicacion DESC");
+
+    const recursos: RecursoEducativo[] = result.recordset;
+
+    res.json(recursos);
   } catch (error) {
     console.error("Error al obtener recursos:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    res.status(500).json({ message: "Error interno del servidor" } as any);
   }
 };
 
-/**
- * Obtener recursos filtrados por categoría
- */
-export const obtenerRecursosPorCategoria = async (req, res) => {
+export const obtenerRecursosPorCategoria = async (
+  req: Request<ParamsCategoria>,
+  res: Response<RecursoEducativo[]>
+): Promise<void> => {
   const { categoria } = req.params;
 
   try {
@@ -25,23 +53,30 @@ export const obtenerRecursosPorCategoria = async (req, res) => {
     const result = await pool
       .request()
       .input("categoria", sql.NVarChar, categoria)
-      .query("SELECT * FROM RecursosEducativos WHERE categoria = @categoria ORDER BY fecha_publicacion DESC");
+      .query(
+        "SELECT * FROM RecursosEducativos WHERE categoria = @categoria ORDER BY fecha_publicacion DESC"
+      );
 
-    res.json(result.recordset);
+    const recursos: RecursoEducativo[] = result.recordset;
+
+    res.json(recursos);
   } catch (error) {
     console.error("Error al filtrar recursos:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    res.status(500).json({ message: "Error interno del servidor" } as any);
   }
 };
 
-/**
- * Crear nuevo recurso educativo
- */
-export const crearRecurso = async (req, res) => {
+
+export const crearRecurso = async (
+  req: Request<{}, {}, BodyRecurso>,
+  res: Response
+): Promise<void> => {
   const { titulo, descripcion, categoria, tipo, url, autor } = req.body;
 
-  if (!titulo)
-    return res.status(400).json({ message: "El título del recurso es obligatorio" });
+  if (!titulo) {
+    res.status(400).json({ message: "El título del recurso es obligatorio" });
+    return;
+  }
 
   try {
     const pool = await getConnection();
@@ -65,10 +100,10 @@ export const crearRecurso = async (req, res) => {
   }
 };
 
-/**
- * Actualizar un recurso existente
- */
-export const actualizarRecurso = async (req, res) => {
+export const actualizarRecurso = async (
+  req: Request<ParamsRecurso, {}, BodyRecurso>,
+  res: Response
+): Promise<void> => {
   const { id_recurso } = req.params;
   const { titulo, descripcion, categoria, tipo, url, autor } = req.body;
 
@@ -76,7 +111,7 @@ export const actualizarRecurso = async (req, res) => {
     const pool = await getConnection();
     await pool
       .request()
-      .input("id_recurso", sql.Int, id_recurso)
+      .input("id_recurso", sql.Int, Number(id_recurso))
       .input("titulo", sql.NVarChar, titulo)
       .input("descripcion", sql.NVarChar, descripcion)
       .input("categoria", sql.NVarChar, categoria)
@@ -101,15 +136,21 @@ export const actualizarRecurso = async (req, res) => {
   }
 };
 
-/**
- * Eliminar un recurso educativo
- */
-export const eliminarRecurso = async (req, res) => {
+export const eliminarRecurso = async (
+  req: Request<ParamsRecurso>,
+  res: Response
+): Promise<void> => {
   const { id_recurso } = req.params;
 
   try {
     const pool = await getConnection();
-    await pool.request().input("id_recurso", sql.Int, id_recurso).query("DELETE FROM RecursosEducativos WHERE id_recurso = @id_recurso");
+    await pool
+      .request()
+      .input("id_recurso", sql.Int, Number(id_recurso))
+      .query(
+        "DELETE FROM RecursosEducativos WHERE id_recurso = @id_recurso"
+      );
+
     res.json({ message: "Recurso eliminado correctamente" });
   } catch (error) {
     console.error("Error al eliminar recurso:", error);

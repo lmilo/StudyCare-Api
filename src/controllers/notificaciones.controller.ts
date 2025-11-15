@@ -1,37 +1,43 @@
-import { getConnection, sql } from "../config/db.js";
+import { Request, Response } from "express";
+import { getConnection, sql } from "../config/db";
+import { Notificacion, ParamsUsuario, BodyCrearNotificacion,ParamsNotificacion } from "../interfaces/notificacion";
 
-/**
- * Obtener todas las notificaciones de un usuario
- */
-export const obtenerNotificacionesPorUsuario = async (req, res) => {
+export const obtenerNotificacionesPorUsuario = async (
+  req: Request<ParamsUsuario>,
+  res: Response<Notificacion[]>
+): Promise<void> => {
   const { usuario_id } = req.params;
 
   try {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .input("usuario_id", sql.Int, usuario_id)
+      .input("usuario_id", sql.Int, Number(usuario_id))
       .query(
         "SELECT * FROM Notificaciones WHERE usuario_id = @usuario_id ORDER BY fecha_envio DESC"
       );
 
-    res.json(result.recordset);
+    const notificaciones: Notificacion[] = result.recordset;
+
+    res.json(notificaciones);
   } catch (error) {
     console.error("Error al obtener notificaciones:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    res.status(500).json({ message: "Error interno del servidor" } as any);
   }
 };
 
-/**
- * Crear una nueva notificación
- */
-export const crearNotificacion = async (req, res) => {
+export const crearNotificacion = async (
+  req: Request<{}, {}, BodyCrearNotificacion>,
+  res: Response
+): Promise<void> => {
   const { usuario_id, titulo, mensaje, tipo } = req.body;
 
-  if (!usuario_id || !titulo)
-    return res
+  if (!usuario_id || !titulo) {
+    res
       .status(400)
       .json({ message: "usuario_id y título son obligatorios" });
+    return;
+  }
 
   try {
     const pool = await getConnection();
@@ -53,17 +59,18 @@ export const crearNotificacion = async (req, res) => {
   }
 };
 
-/**
- * Marcar una notificación como leída
- */
-export const marcarLeida = async (req, res) => {
+
+export const marcarLeida = async (
+  req: Request<ParamsNotificacion>,
+  res: Response
+): Promise<void> => {
   const { id_notificacion } = req.params;
 
   try {
     const pool = await getConnection();
     await pool
       .request()
-      .input("id_notificacion", sql.Int, id_notificacion)
+      .input("id_notificacion", sql.Int, Number(id_notificacion))
       .query(
         "UPDATE Notificaciones SET leida = 1 WHERE id_notificacion = @id_notificacion"
       );
@@ -78,15 +85,20 @@ export const marcarLeida = async (req, res) => {
 /**
  * Eliminar una notificación
  */
-export const eliminarNotificacion = async (req, res) => {
+export const eliminarNotificacion = async (
+  req: Request<ParamsNotificacion>,
+  res: Response
+): Promise<void> => {
   const { id_notificacion } = req.params;
 
   try {
     const pool = await getConnection();
     await pool
       .request()
-      .input("id_notificacion", sql.Int, id_notificacion)
-      .query("DELETE FROM Notificaciones WHERE id_notificacion = @id_notificacion");
+      .input("id_notificacion", sql.Int, Number(id_notificacion))
+      .query(
+        "DELETE FROM Notificaciones WHERE id_notificacion = @id_notificacion"
+      );
 
     res.json({ message: "Notificación eliminada correctamente" });
   } catch (error) {

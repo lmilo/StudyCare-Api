@@ -5,7 +5,7 @@ import {
   marcarCumplidoHoy,
   reiniciarCumplimiento,
   eliminarHabito,
-} from "../controllers/habitosController.js";
+} from "../controllers/habitos.controller.js";
 
 const router = express.Router();
 

@@ -5,7 +5,7 @@ import {
   crearRecurso,
   actualizarRecurso,
   eliminarRecurso,
-} from "../controllers/recursosController.js";
+} from "../controllers/recursos.controller.js";
 
 const router = express.Router();
 

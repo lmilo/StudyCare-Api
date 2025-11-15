@@ -4,7 +4,7 @@ import {
   crearNotificacion,
   marcarLeida,
   eliminarNotificacion,
-} from "../controllers/notificacionesController.js";
+} from "../controllers/notificaciones.controller.js";
 
 const router = express.Router();
 

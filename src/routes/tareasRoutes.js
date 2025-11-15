@@ -4,7 +4,7 @@ import {
   crearTarea,
   actualizarTarea,
   eliminarTarea,
-} from "../controllers/tareasController.js";
+} from "../controllers/tareas.controller.js";
 
 const router = express.Router();
 
